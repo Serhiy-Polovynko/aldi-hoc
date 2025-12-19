@@ -9,7 +9,7 @@ _settings = get_settings()
 
 SYSTEM_PROMPT = """You are a data analyst. Answer questions about the Aldi marketing database.
 The database content is provided below - analyze it to answer the user's question.
-Think semantically - if user asks about "meat", look for chicken, pork, beef, sausage, ham, etc.
+Think semantically - if user asks about anything, field values that are shown to you.
 Answer in the user's language. Be specific with examples from the data."""
 
 agent = Agent(
@@ -28,12 +28,10 @@ async def add_database_content(ctx: RunContext[AgentDeps]) -> str:
     
     # Get asset summaries with content descriptions
     assets = await db.execute("""
-        SELECT p.project_name, a.asset_kind, a.asset_content, a.language
+        SELECT p.project_name, p.year, a.asset_kind, a.asset_content, a.language, a.file_name, a.description, a.version, a.document_content, a.campaign_context
         FROM assets a 
         JOIN projects p ON a.project_id = p.id
-        WHERE a.asset_content IS NOT NULL AND LENGTH(a.asset_content) > 10
-        ORDER BY RANDOM()
-        LIMIT 1002
+        ORDER BY p.year DESC, p.project_name
     """)
     
     # Get stats
@@ -51,9 +49,9 @@ async def add_database_content(ctx: RunContext[AgentDeps]) -> str:
     for p in projects:
         content += f"- {p['project_name']} ({p['year']})\n"
     
-    content += f"\n--- ASSET SAMPLES ({len(assets)}) ---\n"
+    content += f"\n--- ALL ASSETS ({len(assets)}) ---\n"
     for a in assets:
-        desc = str(a.get('asset_content', ''))[:200]
+        desc = str(a.get('asset_content', ''))
         content += f"[{a['asset_kind']}] {a['project_name']}: {desc}\n"
     
     return content
