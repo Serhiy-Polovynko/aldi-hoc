@@ -1,0 +1,47 @@
+aldi_rag_local/
+│
+├── aldi_hoc_companion/              # Main application package
+│   ├── __init__.py
+│   │
+│   ├── agent/                       # AI Agent module
+│   │   ├── __init__.py
+│   │   ├── prompts.py               # System prompts
+│   │   └── qa_agent.py              # Pydantic-AI agent & tools
+│   │
+│   ├── app/                         # FastAPI application
+│   │   ├── __init__.py
+│   │   └── main.py                  # API endpoints
+│   │
+│   ├── core/                        # Core utilities
+│   │   ├── __init__.py
+│   │   ├── config.py                # Settings & configuration
+│   │   └── logging.py               # Singleton logger
+│   │
+│   ├── db/                          # Database layer
+│   │   ├── __init__.py
+│   │   └── db.py                    # Database connection & queries
+│   │
+│   └── models/                      # Pydantic & dataclass models
+│       ├── __init__.py
+│       ├── agent_models.py          # Agent-related models
+│       ├── app_models.py            # API request/response models
+│       └── logging_models.py        # Logging data classes
+│
+├── logs/                            # Application logs
+│   └── requests.log
+│
+├── sql/                             # SQL scripts
+│   └── scripts/
+│       ├── model_creation.sql       # Database schema
+│       └── sanity_test_script.sql   # Test queries
+│
+├── tests/                           # Test suite
+│   ├── test_config.py
+│   ├── test_db_connection.py
+│   └── test_queries.py
+│
+├── pyproject.toml                   # Project metadata & dependencies
+├── requirements.txt                 # Pip dependencies
+├── uv.lock                          # UV lockfile
+└── README.md                        # Documentation
+

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aldi HoC Companion</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #e8e8e8;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0,0,0,0.2);
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            color: #4ecca3;
+        }
+        .chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .message {
+            max-width: 80%;
+            padding: 1rem;
+            border-radius: 12px;
+            line-height: 1.5;
+        }
+        .user {
+            align-self: flex-end;
+            background: #4ecca3;
+            color: #1a1a2e;
+        }
+        .assistant {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.1);
+        }
+        .stats {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .assistant ul, .assistant ol {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        .assistant li {
+            margin: 0.3rem 0;
+        }
+        .assistant p {
+            margin: 0.4rem 0;
+        }
+        .assistant p:first-child {
+            margin-top: 0;
+        }
+        .assistant h1, .assistant h2, .assistant h3 {
+            margin: 0.5rem 0 0.3rem 0;
+            color: #4ecca3;
+        }
+        .assistant h1 { font-size: 1.3rem; }
+        .assistant h2 { font-size: 1.1rem; }
+        .assistant h3 { font-size: 1rem; }
+        .assistant strong { color: #4ecca3; }
+        .assistant code {
+            background: rgba(0,0,0,0.3);
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .assistant pre {
+            background: rgba(0,0,0,0.3);
+            padding: 0.5rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+        }
+        .assistant blockquote {
+            border-left: 3px solid #4ecca3;
+            padding-left: 0.75rem;
+            margin: 0.5rem 0;
+            opacity: 0.8;
+        }
+        .input-area {
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            gap: 0.5rem;
+        }
+        input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+        input::placeholder { color: rgba(255,255,255,0.5); }
+        button {
+            padding: 1rem 2rem;
+            background: #4ecca3;
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:disabled { opacity: 0.5; }
+        .loading { opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Aldi HoC Companion</h1>
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Ask a question..." />
+        <button id="send">Send</button>
+    </div>
+    <script>
+        const chat = document.getElementById('chat');
+        const input = document.getElementById('input');
+        const send = document.getElementById('send');
+
+        function formatResponse(text) {
+            // Use marked.js to parse markdown
+            return marked.parse(text);
+        }
+
+        async function sendMessage() {
+            const q = input.value.trim();
+            if (!q) return;
+
+            input.disabled = true;
+            send.disabled = true;
+
+            chat.innerHTML += `<div class="message user">${q}</div>`;
+            input.value = '';
+            
+            const loading = document.createElement('div');
+            loading.className = 'message assistant loading';
+            loading.textContent = 'Thinking...';
+            chat.appendChild(loading);
+            chat.scrollTop = chat.scrollHeight;
+
+            const startTime = performance.now();
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: q })
+                });
+                const duration = ((performance.now() - startTime) / 1000).toFixed(1);
+                const data = await res.json();
+                loading.remove();
+                
+                if (res.ok) {
+                    const u = data.usage;
+                    const stats = `⏱️ ${duration}s | 📥 ${u.input_tokens} in | 📤 ${u.output_tokens} out | 💰 $${u.total_cost_usd.toFixed(4)}`;
+                    const formattedAnswer = formatResponse(data.answer);
+                    chat.innerHTML += `<div class="message assistant">${formattedAnswer}<div class="stats">${stats}</div></div>`;
+                } else {
+                    chat.innerHTML += `<div class="message assistant">Error: ${data.detail}</div>`;
+                }
+            } catch (e) {
+                loading.remove();
+                chat.innerHTML += `<div class="message assistant">Error: ${e.message}</div>`;
+            }
+
+            input.disabled = false;
+            send.disabled = false;
+            input.focus();
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        send.onclick = sendMessage;
+        input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+        input.focus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+__pycache__
+.pytest_cache
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+
+# Environments
+.env
+.venv/
+venv/
+env/
+aldi_rag_mvp1/
+.aldi_rag_mvp1/
+aldi_rag_mvp1_win/
+.aldi_rag_mvp1_win/
+
+# OS
+.DS_Store
+
+# Data / indexes
+data/index/*
+!data/index/.gitkeep
+
+# Optional: raw docs not tracked
+# data/raw/*
+# !data/raw/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+
+#logs
+logs/
+
+#sql
+sql/
+
+#uv
+uv.lock
+
